@@ -15,7 +15,13 @@ This repository provides a simple Python script for recording a meeting on macOS
    ```bash
    brew install ffmpeg
    ```
-2. Install Python dependencies:
+2. Create and activate a virtual environment:
+   ```bash
+   python3 -m venv .venv
+   source .venv/bin/activate
+   ```
+   The remaining commands assume the virtual environment is active.
+3. Install Python dependencies (run inside the virtual environment):
    ```bash
    pip install -U openai-whisper openai numpy nltk google-generativeai
    ```
