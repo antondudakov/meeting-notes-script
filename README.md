@@ -49,6 +49,27 @@ This repository provides a simple Python script for recording a meeting on macOS
 - `gemini_model` – Gemini model name (default `gemini-pro`).
 - `output_dir` – folder where audio, transcripts, and notes are stored.
 
+## Capturing Browser and Microphone Audio with BlackHole
+
+1. Install the virtual audio driver (2‑channel version is enough for meetings):
+   ```bash
+   brew install blackhole-2ch
+   ```
+   Alternatively download the installer from
+   [BlackHole on GitHub](https://github.com/ExistentialAudio/BlackHole).
+2. Open **Audio MIDI Setup** and create two devices:
+   - A **Multi-Output Device** containing your usual speakers/headphones and
+     **BlackHole**. Set this as the macOS output so you can hear the meeting.
+   - An **Aggregate Device** that combines your microphone with **BlackHole**.
+3. In the browser or meeting app, select the Aggregate Device as the microphone
+   and choose the Multi-Output Device for output.
+4. List available devices to find the index of the Aggregate Device:
+   ```bash
+   ffmpeg -f avfoundation -list_devices true -i ""
+   ```
+   Use the displayed index for `audio_device` in `settings.json`.
+   Recording will then include audio from the browser and your microphone.
+
 ## Notes
 
 - Capturing system audio from Google Meet may require a virtual audio driver such as BlackHole. Select the device in `settings.json`.
