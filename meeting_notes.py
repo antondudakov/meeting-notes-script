@@ -56,7 +56,7 @@ def transcribe_audio(audio_path, model_size="base", language="en"):
     result = model.transcribe(audio_path, language=language)
     return result["text"].strip()
 
-def summarize_text(text, sentences=5, provider="openai", model="gpt-3.5-turbo"):
+def summarize_text(text, sentences=5, provider="openai", model="gpt-3.5-turbo", language="en"):
     if provider == "openai":
         api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key:
@@ -64,7 +64,7 @@ def summarize_text(text, sentences=5, provider="openai", model="gpt-3.5-turbo"):
         client = openai.OpenAI(api_key=api_key)
         prompt = (
             "Summarize the following meeting transcript into "
-            f"{sentences} concise bullet points."
+            f"{sentences} concise bullet points. The meeting language code is {language}"
         )
         response = client.chat.completions.create(
             model=model,
@@ -132,6 +132,7 @@ def main():
         cfg.get("summary_sentences", 5),
         provider,
         cfg.get(model_key, "gpt-3.5-turbo" if provider == "openai" else "gemini-pro"),
+        lang,
     )
     notes_path = os.path.join(cfg.get("output_dir", "output"), f"notes_{ts}.md" if cfg.get("output_format", "text") == "markdown" else f"notes_{ts}.txt")
     save_output(notes, notes_path, cfg.get("output_format", "text"))
