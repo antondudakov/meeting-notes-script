@@ -76,6 +76,20 @@ This repository provides a simple Python script for recording a meeting on macOS
    Use the displayed index for `audio_device` in `settings.json`.
    Recording will then include audio from the browser and your microphone.
 
+## Creating an Apple Shortcut for Quick Recording
+
+You can add a menu bar shortcut to run the script with one click:
+
+1. Open **Shortcuts** and create a new shortcut.
+2. Add the **Run Shell Script** action.
+3. Enter the command to start the script, for example:
+   ```bash
+   /path/to/venv/bin/python /path/to/meeting-notes-script/meeting_notes.py
+   ```
+   Use absolute paths so the shortcut works from any location.
+4. Click the shortcut's **i** button and enable **Pin in Menu Bar**.
+5. Optionally assign a keyboard shortcut.
+6. Click the new icon in the menu bar (top-right panel) whenever you want to start recording.
 ## Notes
 
 - Capturing system audio from Google Meet may require a virtual audio driver such as BlackHole. Select the device in `settings.json`.
