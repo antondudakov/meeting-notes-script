@@ -104,10 +104,14 @@ def save_output(text, path, fmt="text"):
 
 def main():
     cfg = load_config(CONFIG_PATH)
-    os.makedirs(cfg.get("output_dir", "output"), exist_ok=True)
+    root_dir = cfg.get("output_dir", "output")
+    os.makedirs(root_dir, exist_ok=True)
 
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-    audio_file = os.path.join(cfg.get("output_dir", "output"), f"recording_{ts}.wav")
+    meeting_dir = os.path.join(root_dir, f"meeting_{ts}")
+    os.makedirs(meeting_dir, exist_ok=True)
+
+    audio_file = os.path.join(meeting_dir, f"recording_{ts}.wav")
     print(f"Recording audio to {audio_file} ...")
     record_audio(
         audio_file,
@@ -122,9 +126,11 @@ def main():
         cfg.get("transcription_model", "base"),
         lang
     )
-    transcript_path = os.path.join(cfg.get("output_dir", "output"), f"transcript_{ts}.txt")
-    save_output(transcript, transcript_path, "text")
-    print(f"Transcript saved to {transcript_path}")
+    transcript_path_txt = os.path.join(meeting_dir, f"transcript_{ts}.txt")
+    save_output(transcript, transcript_path_txt, "text")
+    transcript_path_md = os.path.join(meeting_dir, f"transcript_{ts}.md")
+    save_output(transcript, transcript_path_md, "markdown")
+    print(f"Transcript saved to {transcript_path_txt} and {transcript_path_md}")
 
     print("Summarizing transcript with LLM ...")
     provider = cfg.get("llm_provider", "openai")
@@ -136,8 +142,15 @@ def main():
         cfg.get(model_key, "gpt-3.5-turbo" if provider == "openai" else "gemini-pro"),
         lang,
     )
-    notes_path = os.path.join(cfg.get("output_dir", "output"), f"notes_{ts}.md" if cfg.get("output_format", "text") == "markdown" else f"notes_{ts}.txt")
-    save_output(notes, notes_path, cfg.get("output_format", "text"))
+    notes_file = f"notes_{ts}.md" if cfg.get("output_format", "text") == "markdown" else f"notes_{ts}.txt"
+    notes_path = os.path.join(meeting_dir, notes_file)
+
+    links = [f"[Transcript](transcript_{ts}.md)"]
+    if audio_file:
+        links.append(f"[Audio Recording](recording_{ts}.wav)")
+    header = " | ".join(links)
+    notes_content = header + "\n\n" + notes
+    save_output(notes_content, notes_path, cfg.get("output_format", "text"))
     print(f"Notes saved to {notes_path}")
 
 if __name__ == "__main__":
