@@ -3,6 +3,7 @@ import os
 import subprocess
 import signal
 from datetime import datetime
+import argparse
 
 try:
     import openai
@@ -16,6 +17,11 @@ except ImportError:
 
 
 CONFIG_PATH = os.environ.get("MEETING_SETTINGS", "settings.json")
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Record a meeting and generate notes")
+    parser.add_argument("--name", help="Name of the meeting folder")
+    return parser.parse_args()
 
 def load_config(path):
     with open(path, 'r') as f:
@@ -103,12 +109,14 @@ def save_output(text, path, fmt="text"):
         f.write(text)
 
 def main():
+    args = parse_args()
     cfg = load_config(CONFIG_PATH)
     root_dir = cfg.get("output_dir", "output")
     os.makedirs(root_dir, exist_ok=True)
 
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-    meeting_dir = os.path.join(root_dir, f"meeting_{ts}")
+    folder_name = args.name.strip().replace(" ", "_") if args.name else f"meeting_{ts}"
+    meeting_dir = os.path.join(root_dir, folder_name)
     os.makedirs(meeting_dir, exist_ok=True)
 
     audio_file = os.path.join(meeting_dir, f"recording_{ts}.wav")
@@ -145,9 +153,10 @@ def main():
     notes_file = f"notes_{ts}.md" if cfg.get("output_format", "text") == "markdown" else f"notes_{ts}.txt"
     notes_path = os.path.join(meeting_dir, notes_file)
 
-    links = [f"[Transcript](transcript_{ts}.md)"]
-    if audio_file:
-        links.append(f"[Audio Recording](recording_{ts}.wav)")
+    links = [
+        f"[Transcript](transcript_{ts}.md)",
+        f"[Audio Recording](recording_{ts}.wav)"
+    ]
     header = " | ".join(links)
     notes_content = header + "\n\n" + notes
     save_output(notes_content, notes_path, cfg.get("output_format", "text"))

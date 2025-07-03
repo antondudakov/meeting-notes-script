@@ -33,12 +33,12 @@ This repository provides a simple Python script for recording a meeting on macOS
 ## Usage
 
 1. Adjust `settings.json` to configure recording duration, output format, and other options.
-2. Run the script:
+2. Run the script. Optionally provide a folder name for the meeting:
    ```bash
-   python meeting_notes.py
+   python meeting_notes.py --name "Weekly Sync"
    ```
    Press **Ctrl+C** to stop recording before the configured maximum duration if needed.
-3. The script records your meeting, transcribes the audio with Whisper, and summarizes the transcript using an LLM (OpenAI or Gemini). All files are stored in a timestamped `meeting_YYYYMMDD_HHMMSS` folder inside the directory specified by `output_dir` in `settings.json`.
+3. The script records your meeting, transcribes the audio with Whisper, and summarizes the transcript using an LLM (OpenAI or Gemini). All files are stored in a subfolder of `output_dir`. If no name is provided, a `meeting_YYYYMMDD_HHMMSS` folder is created automatically.
 
 ## Configuration
 
@@ -53,18 +53,20 @@ This repository provides a simple Python script for recording a meeting on macOS
 - `llm_provider` – `openai` or `gemini` for summarization.
 - `openai_model` – OpenAI chat model to use (default `gpt-3.5-turbo`).
 - `gemini_model` – Gemini model name (default `gemini-pro`).
-- `output_dir` – root directory where meeting folders are created. Each run creates `meeting_YYYYMMDD_HHMMSS` containing the recording, transcripts, and notes.
+- `output_dir` – root directory where meeting folders are created. Provide a name with `--name` or a timestamped `meeting_YYYYMMDD_HHMMSS` folder is used.
 
 Example output structure:
 
 ```
 output_dir/
-└─ meeting_20250703_104658/
+└─ Weekly_Sync/
    ├─ recording_20250703_104658.wav
    ├─ transcript_20250703_104658.txt
    ├─ transcript_20250703_104658.md
    └─ notes_20250703_104658.md
 ```
+
+The notes file starts with links to the transcript and audio so you can easily navigate between them in Obsidian.
 
 ## Capturing Browser and Microphone Audio with BlackHole
 
