@@ -6,8 +6,8 @@ This repository provides a simple Python script for recording a meeting on macOS
 
 - macOS with `ffmpeg` installed (via Homebrew or other method).
 - Python 3.11+
-- Python packages: `openai-whisper`, `openai`, `numpy`, `nltk`, `google-generativeai`.
-  Install `whispercpp` if you want to use the whispercpp backend.
+ - Python packages: `openai-whisper`, `openai`, `numpy`, `nltk`, `google-generativeai`.
+ - Compiled `whisper-cli` from [`ggml-org/whisper.cpp`](https://github.com/ggml-org/whisper.cpp) if you want to use the whispercpp backend.
 - A virtual audio device such as **BlackHole** is required if you want to capture sound coming from the browser. Without it the script only records your microphone.
 - [`switchaudio-osx`](https://github.com/deweller/switchaudio-osx) is required for automatic switching of input/output devices (optional).
 
@@ -21,17 +21,26 @@ This repository provides a simple Python script for recording a meeting on macOS
    ```bash
    brew install switchaudio-osx
    ```
-3. Create and activate a virtual environment:
+3. Clone and build `whisper.cpp` if you plan to use the `whispercpp` backend:
+   ```bash
+   git clone https://github.com/ggml-org/whisper.cpp
+   cd whisper.cpp
+   make -j
+   ./models/download-ggml-model.sh base
+   cd ..
+   ```
+   The command above downloads the multilingual `ggml-base.bin` model which
+   supports Russian. See the [whisper.cpp models list](https://github.com/ggml-org/whisper.cpp#models)
+   for other available models such as `large-v3-turbo`.
+4. Create and activate a virtual environment:
    ```bash
    python3 -m venv .venv
    source .venv/bin/activate
    ```
    The remaining commands assume the virtual environment is active.
-4. Install Python dependencies (run inside the virtual environment):
+5. Install Python dependencies (run inside the virtual environment):
    ```bash
-   pip install -U openai-whisper openai numpy nltk google-generativeai
-   # Add whispercpp if using the whispercpp backend
-   pip install whispercpp
+    pip install -U openai-whisper openai numpy nltk google-generativeai
    ```
    Download NLTK data for tokenization:
    ```bash
@@ -66,6 +75,8 @@ This repository provides a simple Python script for recording a meeting on macOS
 - `duration_seconds` – max recording length in seconds. Set to `0` to record until you press **Ctrl+C**.
 - `transcription_model` – Whisper model size (e.g., `tiny`, `base`, `small`).
 - `transcription_backend` – `whisper` (Python implementation) or `whispercpp`.
+- `whispercpp_binary` – path to the compiled `whisper-cli` executable.
+- `whispercpp_model` – path to the Whisper model file in ggml format.
 - `language` – ISO language code used by Whisper (e.g., `ru`, `en`).
 - `summary_sentences` – number of sentences to include in the generated notes.
 - `output_format` – `text` or `markdown` for notes output.

@@ -54,7 +54,12 @@ def record_audio(output_file, device, duration=None):
         proc.wait()
 
 def transcribe_audio(
-    audio_path, model_size="base", language="en", backend="whisper"
+    audio_path,
+    model_size="base",
+    language="en",
+    backend="whisper",
+    whispercpp_bin=None,
+    whispercpp_model=None,
 ):
     """Transcribe ``audio_path`` using the selected backend.
 
@@ -62,22 +67,26 @@ def transcribe_audio(
     """
 
     if backend == "whispercpp":
+        binary = whispercpp_bin or "whisper-cli"
+        model_path = whispercpp_model or f"models/ggml-{model_size}.bin"
+        cmd = [
+            binary,
+            "-m",
+            model_path,
+            "-f",
+            audio_path,
+            "-l",
+            language,
+            "-nt",
+            "-np",
+        ]
         try:
-            from whispercpp import Whisper, api
-        except ImportError:  # pragma: no cover - dependency missing at runtime
+            out = subprocess.check_output(cmd, stderr=subprocess.DEVNULL)
+        except FileNotFoundError:
             raise SystemExit(
-                "whispercpp is required. Install with `pip install whispercpp`"
+                "whisper-cli not found. Build whisper.cpp and set 'whispercpp_binary' in settings.json"
             )
-
-        params = (
-            api.Params.from_enum(api.SAMPLING_GREEDY)
-            .with_print_progress(False)
-            .with_print_realtime(False)
-            .with_language(language)
-            .build()
-        )
-        model = Whisper.from_params(model_size, params)
-        return model.transcribe_from_file(audio_path)
+        return out.decode().strip()
 
     device = "mps" if torch.has_mps else "cpu"
     model = whisper.load_model(model_size, device=device)
@@ -197,6 +206,8 @@ def main():
             cfg.get("transcription_model", "base"),
             lang,
             cfg.get("transcription_backend", "whisper"),
+            cfg.get("whispercpp_binary"),
+            cfg.get("whispercpp_model"),
         )
         transcript_path = os.path.join(meeting_dir, f"transcript_{ts}.txt")
         save_output(transcript, transcript_path, "text")
