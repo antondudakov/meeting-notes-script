@@ -53,7 +53,8 @@ def record_audio(output_file, device, duration=None):
         proc.wait()
 
 def transcribe_audio(audio_path, model_size="base", language="en"):
-    model = whisper.load_model(model_size)
+    device = "mps" if torch.has_mps else "cpu"
+    model = whisper.load_model(model_size, device=device)
     result = model.transcribe(audio_path, language=language)
     return result["text"].strip()
 
