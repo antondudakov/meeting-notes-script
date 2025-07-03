@@ -43,7 +43,15 @@ This repository provides a simple Python script for recording a meeting on macOS
    python meeting_notes.py
    ```
    Press **Ctrl+C** to stop recording before the configured maximum duration if needed.
-3. The script records your meeting, transcribes the audio with Whisper, and summarizes the transcript using an LLM (OpenAI or Gemini). Files are saved in the directory specified by `output_dir` in `settings.json`.
+3. The script records your meeting, transcribes the audio with Whisper, and summarizes the transcript using an LLM (OpenAI or Gemini). Each run creates a new folder inside the directory specified by `output_dir`, storing the audio, transcript, and notes for that meeting.
+   Example structure:
+   ```
+   output/
+   output/meeting_20250703_104658/
+   output/meeting_20250703_104658/notes_20250703_104658.md
+   output/meeting_20250703_104658/recording_20250703_104658.wav
+   output/meeting_20250703_104658/transcript_20250703_104658.txt
+   ```
 
 ## Configuration
 
@@ -60,7 +68,7 @@ This repository provides a simple Python script for recording a meeting on macOS
 - `llm_provider` – `openai` or `gemini` for summarization.
 - `openai_model` – OpenAI chat model to use (default `gpt-3.5-turbo`).
 - `gemini_model` – Gemini model name (default `gemini-pro`).
-- `output_dir` – folder where audio, transcripts, and notes are stored.
+- `output_dir` – root folder where meeting subfolders are created.
 - `keep_audio` – set to `false` to delete the recording after transcription.
 
 ## Capturing Browser and Microphone Audio with BlackHole

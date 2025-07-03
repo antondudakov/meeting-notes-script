@@ -4,6 +4,7 @@ import subprocess
 import signal
 from datetime import datetime
 import shutil
+import torch
 
 try:
     import openai
@@ -146,14 +147,17 @@ def restore_audio_sources(prev_input=None, prev_output=None):
 
 def main():
     cfg = load_config(CONFIG_PATH)
-    os.makedirs(cfg.get("output_dir", "output"), exist_ok=True)
+    base_dir = cfg.get("output_dir", "output")
+    os.makedirs(base_dir, exist_ok=True)
 
     prev_in, prev_out = switch_audio_sources(
         cfg.get("input_source"), cfg.get("output_source")
     )
     try:
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-        audio_file = os.path.join(cfg.get("output_dir", "output"), f"recording_{ts}.wav")
+        meeting_dir = os.path.join(base_dir, f"meeting_{ts}")
+        os.makedirs(meeting_dir, exist_ok=True)
+        audio_file = os.path.join(meeting_dir, f"recording_{ts}.wav")
         print(f"Recording audio to {audio_file} ...")
         record_audio(
             audio_file,
@@ -168,21 +172,34 @@ def main():
             cfg.get("transcription_model", "base"),
             lang
         )
-        transcript_path = os.path.join(cfg.get("output_dir", "output"), f"transcript_{ts}.txt")
+        transcript_path = os.path.join(meeting_dir, f"transcript_{ts}.txt")
         save_output(transcript, transcript_path, "text")
         print(f"Transcript saved to {transcript_path}")
 
         print("Summarizing transcript with LLM ...")
         provider = cfg.get("llm_provider", "openai")
         model_key = "openai_model" if provider == "openai" else "gemini_model"
-        notes = summarize_text(
+        notes_summary = summarize_text(
             transcript,
             cfg.get("summary_sentences", 5),
             provider,
             cfg.get(model_key, "gpt-3.5-turbo" if provider == "openai" else "gemini-pro"),
         )
-        notes_path = os.path.join(cfg.get("output_dir", "output"), f"notes_{ts}.md" if cfg.get("output_format", "text") == "markdown" else f"notes_{ts}.txt")
-        save_output(notes, notes_path, cfg.get("output_format", "text"))
+        links = [f"[Transcript]({os.path.basename(transcript_path)})"]
+        if cfg.get("keep_audio", True):
+            links.append(f"[Audio]({os.path.basename(audio_file)})")
+        notes_content = (
+            notes_summary
+            + "\n\n"
+            + " | ".join(links)
+            + "\n\n## Transcript\n\n"
+            + transcript
+        )
+        notes_path = os.path.join(
+            meeting_dir,
+            f"notes_{ts}.md" if cfg.get("output_format", "text") == "markdown" else f"notes_{ts}.txt",
+        )
+        save_output(notes_content, notes_path, cfg.get("output_format", "text"))
         print(f"Notes saved to {notes_path}")
     finally:
         restore_audio_sources(prev_in, prev_out)
