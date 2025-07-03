@@ -51,19 +51,19 @@ def summarize_text(text, sentences=5, provider="openai", model="gpt-3.5-turbo"):
         api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key:
             raise RuntimeError("OPENAI_API_KEY environment variable not set")
-        openai.api_key = api_key
+        client = openai.OpenAI(api_key=api_key)
         prompt = (
             "Summarize the following meeting transcript into "
             f"{sentences} concise bullet points."
         )
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model=model,
             messages=[
                 {"role": "system", "content": prompt},
                 {"role": "user", "content": text},
             ],
         )
-        return response["choices"][0]["message"]["content"].strip()
+        return response.choices[0].message.content.strip()
     elif provider == "gemini":
         try:
             import google.generativeai as genai
