@@ -57,15 +57,17 @@ def transcribe_audio(audio_path, model_size="base", language="en"):
     result = model.transcribe(audio_path, language=language)
     return result["text"].strip()
 
-def summarize_text(text, sentences=5, provider="openai", model="gpt-3.5-turbo"):
+def summarize_text(text, sentences=5, provider="openai", model="gpt-3.5-turbo", language="en"):
     if provider == "openai":
         api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key:
             raise RuntimeError("OPENAI_API_KEY environment variable not set")
         client = openai.OpenAI(api_key=api_key)
         prompt = (
-            "Summarize the following meeting transcript into "
-            f"{sentences} concise bullet points."
+            "Summarize the following meeting transcript. "
+            "- First, provide a concise summary in bullet points. "
+            "- Then, list all action items separately, each with the responsible person (if mentioned). "
+            f"The most probably meeting language code is {language}"
         )
         response = client.chat.completions.create(
             model=model,
@@ -182,6 +184,13 @@ def main():
         print(f"Notes saved to {notes_path}")
     finally:
         restore_audio_sources(prev_in, prev_out)
+
+    if not cfg.get("keep_audio", True):
+        try:
+            os.remove(audio_file)
+            print(f"Deleted audio file {audio_file}")
+        except OSError as e:
+            print(f"Failed to delete audio file: {e}")
 
 if __name__ == "__main__":
     main()
