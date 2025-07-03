@@ -1,6 +1,6 @@
 {
-  "audio_device": "0",
-  "duration_seconds": 3600,
+  "audio_device": "1",
+  "duration_seconds": 5400,
   "transcription_model": "base",
   "summary_sentences": 5,
   "language": "ru",

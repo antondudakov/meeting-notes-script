@@ -22,6 +22,7 @@ def load_config(path):
         return json.load(f)
 
 def record_audio(output_file, device, duration=None):
+# ffmpeg -f avfoundation -i ":0" -ar 48000 -ac 2 -sample_fmt s16
     cmd = [
         "ffmpeg",
         "-y",
@@ -29,7 +30,16 @@ def record_audio(output_file, device, duration=None):
         "avfoundation",
         "-i",
         f":{device}",
+        "-ar",
+        "48000",
+        "-ac",
+        "2",
+        "-sample_fmt",
+        "s16"
     ]
+
+    print(f"{cmd}")
+
     if duration and duration > 0:
         cmd += ["-t", str(duration)]
     cmd.append(output_file)
