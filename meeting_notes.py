@@ -53,7 +53,32 @@ def record_audio(output_file, device, duration=None):
         proc.send_signal(signal.SIGINT)
         proc.wait()
 
-def transcribe_audio(audio_path, model_size="base", language="en"):
+def transcribe_audio(
+    audio_path, model_size="base", language="en", backend="whisper"
+):
+    """Transcribe ``audio_path`` using the selected backend.
+
+    ``backend`` can be ``"whisper"`` (default) or ``"whispercpp"``.
+    """
+
+    if backend == "whispercpp":
+        try:
+            from whispercpp import Whisper, api
+        except ImportError:  # pragma: no cover - dependency missing at runtime
+            raise SystemExit(
+                "whispercpp is required. Install with `pip install whispercpp`"
+            )
+
+        params = (
+            api.Params.from_enum(api.SAMPLING_GREEDY)
+            .with_print_progress(False)
+            .with_print_realtime(False)
+            .with_language(language)
+            .build()
+        )
+        model = Whisper.from_params(model_size, params)
+        return model.transcribe_from_file(audio_path)
+
     device = "mps" if torch.has_mps else "cpu"
     model = whisper.load_model(model_size, device=device)
     result = model.transcribe(audio_path, language=language)
@@ -170,7 +195,8 @@ def main():
         transcript = transcribe_audio(
             audio_file,
             cfg.get("transcription_model", "base"),
-            lang
+            lang,
+            cfg.get("transcription_backend", "whisper"),
         )
         transcript_path = os.path.join(meeting_dir, f"transcript_{ts}.txt")
         save_output(transcript, transcript_path, "text")

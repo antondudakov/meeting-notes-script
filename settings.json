@@ -4,6 +4,7 @@
   "output_source": "Mixed Output",
   "duration_seconds": 5400,
   "transcription_model": "turbo",
+  "transcription_backend": "whisper",
   "summary_sentences": 5,
   "language": "ru",
   "llm_provider": "openai",

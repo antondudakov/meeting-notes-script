@@ -7,6 +7,7 @@ This repository provides a simple Python script for recording a meeting on macOS
 - macOS with `ffmpeg` installed (via Homebrew or other method).
 - Python 3.11+
 - Python packages: `openai-whisper`, `openai`, `numpy`, `nltk`, `google-generativeai`.
+  Install `whispercpp` if you want to use the whispercpp backend.
 - A virtual audio device such as **BlackHole** is required if you want to capture sound coming from the browser. Without it the script only records your microphone.
 - [`switchaudio-osx`](https://github.com/deweller/switchaudio-osx) is required for automatic switching of input/output devices (optional).
 
@@ -29,6 +30,8 @@ This repository provides a simple Python script for recording a meeting on macOS
 4. Install Python dependencies (run inside the virtual environment):
    ```bash
    pip install -U openai-whisper openai numpy nltk google-generativeai
+   # Add whispercpp if using the whispercpp backend
+   pip install whispercpp
    ```
    Download NLTK data for tokenization:
    ```bash
@@ -62,6 +65,7 @@ This repository provides a simple Python script for recording a meeting on macOS
 - `output_source` – name of the macOS output device to select before recording.
 - `duration_seconds` – max recording length in seconds. Set to `0` to record until you press **Ctrl+C**.
 - `transcription_model` – Whisper model size (e.g., `tiny`, `base`, `small`).
+- `transcription_backend` – `whisper` (Python implementation) or `whispercpp`.
 - `language` – ISO language code used by Whisper (e.g., `ru`, `en`).
 - `summary_sentences` – number of sentences to include in the generated notes.
 - `output_format` – `text` or `markdown` for notes output.
