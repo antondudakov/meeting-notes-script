@@ -63,8 +63,10 @@ def summarize_text(text, sentences=5, provider="openai", model="gpt-3.5-turbo", 
             raise RuntimeError("OPENAI_API_KEY environment variable not set")
         client = openai.OpenAI(api_key=api_key)
         prompt = (
-            "Summarize the following meeting transcript into "
-            f"{sentences} concise bullet points. The meeting language code is {language}"
+            "Summarize the following meeting transcript. "
+            "- First, provide a concise summary in bullet points. "
+            "- Then, list all action items separately, each with the responsible person (if mentioned). "
+            f"The most probably meeting language code is {language}"
         )
         response = client.chat.completions.create(
             model=model,

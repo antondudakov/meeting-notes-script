@@ -5,7 +5,7 @@
   "summary_sentences": 5,
   "language": "ru",
   "llm_provider": "openai",
-  "openai_model": "gpt-3.5-turbo",
+  "openai_model": "gpt-4o",
   "gemini_model": "gemini-pro",
   "output_format": "markdown",
   "output_dir": "/Users/bwdude/Documents/obsidian-vault/meetings"
