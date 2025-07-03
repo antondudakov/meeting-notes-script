@@ -5,16 +5,6 @@ import signal
 from datetime import datetime
 import argparse
 
-try:
-    import openai
-except ImportError:
-    raise SystemExit("openai is required. Install with `pip install openai`")
-
-try:
-    import whisper
-except ImportError:
-    raise SystemExit("whisper is required. Install with `pip install -U openai-whisper`")
-
 
 CONFIG_PATH = os.environ.get("MEETING_SETTINGS", "settings.json")
 
@@ -58,12 +48,20 @@ def record_audio(output_file, device, duration=None):
         proc.wait()
 
 def transcribe_audio(audio_path, model_size="base", language="en"):
+    try:
+        import whisper
+    except ImportError:
+        raise SystemExit("whisper is required. Install with `pip install -U openai-whisper`")
     model = whisper.load_model(model_size)
     result = model.transcribe(audio_path, language=language)
     return result["text"].strip()
 
 def summarize_text(text, sentences=5, provider="openai", model="gpt-3.5-turbo", language="en"):
     if provider == "openai":
+        try:
+            import openai
+        except ImportError:
+            raise SystemExit("openai is required. Install with `pip install openai`")
         api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key:
             raise RuntimeError("OPENAI_API_KEY environment variable not set")
