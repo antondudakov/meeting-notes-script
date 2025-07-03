@@ -5,6 +5,8 @@
   "duration_seconds": 5400,
   "transcription_model": "turbo",
   "transcription_backend": "whisper",
+  "whispercpp_binary": "./whisper.cpp/build/bin/whisper-cli",
+  "whispercpp_model": "./whisper.cpp/models/ggml-base.bin",
   "summary_sentences": 5,
   "language": "ru",
   "llm_provider": "openai",
