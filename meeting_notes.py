@@ -140,5 +140,12 @@ def main():
     save_output(notes, notes_path, cfg.get("output_format", "text"))
     print(f"Notes saved to {notes_path}")
 
+    if not cfg.get("keep_audio", True):
+        try:
+            os.remove(audio_file)
+            print(f"Deleted audio file {audio_file}")
+        except OSError as e:
+            print(f"Failed to delete audio file: {e}")
+
 if __name__ == "__main__":
     main()

@@ -54,6 +54,7 @@ This repository provides a simple Python script for recording a meeting on macOS
 - `openai_model` – OpenAI chat model to use (default `gpt-3.5-turbo`).
 - `gemini_model` – Gemini model name (default `gemini-pro`).
 - `output_dir` – folder where audio, transcripts, and notes are stored.
+- `keep_audio` – set to `false` to delete the recording after transcription.
 
 ## Capturing Browser and Microphone Audio with BlackHole
 
