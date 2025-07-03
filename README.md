@@ -8,6 +8,7 @@ This repository provides a simple Python script for recording a meeting on macOS
 - Python 3.11+
 - Python packages: `openai-whisper`, `openai`, `numpy`, `nltk`, `google-generativeai`.
 - A virtual audio device such as **BlackHole** is required if you want to capture sound coming from the browser. Without it the script only records your microphone.
+- [`switchaudio-osx`](https://github.com/deweller/switchaudio-osx) is required for automatic switching of input/output devices (optional).
 
 ## Installation
 
@@ -15,13 +16,17 @@ This repository provides a simple Python script for recording a meeting on macOS
    ```bash
    brew install ffmpeg
    ```
-2. Create and activate a virtual environment:
+2. Install the command-line tool for switching audio devices (optional but recommended for automatic switching):
+   ```bash
+   brew install switchaudio-osx
+   ```
+3. Create and activate a virtual environment:
    ```bash
    python3 -m venv .venv
    source .venv/bin/activate
    ```
    The remaining commands assume the virtual environment is active.
-3. Install Python dependencies (run inside the virtual environment):
+4. Install Python dependencies (run inside the virtual environment):
    ```bash
    pip install -U openai-whisper openai numpy nltk google-generativeai
    ```
@@ -45,6 +50,8 @@ This repository provides a simple Python script for recording a meeting on macOS
 `settings.json` options:
 
 - `audio_device` – device index for ffmpeg (macOS `avfoundation`).
+- `input_source` – name of the macOS input device to select before recording.
+- `output_source` – name of the macOS output device to select before recording.
 - `duration_seconds` – max recording length in seconds. Set to `0` to record until you press **Ctrl+C**.
 - `transcription_model` – Whisper model size (e.g., `tiny`, `base`, `small`).
 - `language` – ISO language code used by Whisper (e.g., `ru`, `en`).
