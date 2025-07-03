@@ -68,7 +68,8 @@ def summarize_text(text, sentences=5, provider="openai", model="gpt-3.5-turbo", 
             "Summarize the following meeting transcript. "
             "- First, provide a concise summary in bullet points. "
             "- Then, list all action items separately, each with the responsible person (if mentioned). "
-            f"The most probably meeting language code is {language}"
+            f"The most probably meeting language code is {language}. "
+            "Your answer should be in the language of the meeting."
         )
         response = client.chat.completions.create(
             model=model,
