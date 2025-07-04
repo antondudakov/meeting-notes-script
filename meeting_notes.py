@@ -54,29 +54,21 @@ def get_calendar_event_title():
     """Return the title of the current Calendar event on macOS, if any."""
     if platform.system() != "Darwin":
         return None
-    script = (
-        'set eventTitle to ""\n'
-        'tell application "Calendar"\n'
-        '  set nowDate to current date\n'
-        '  set startDate to nowDate - (1 * minutes)\n'
-        '  set endDate to nowDate + (1 * minutes)\n'
-        '  repeat with cal in calendars\n'
-        '    try\n'
-        '      set evt to first event of cal whose start date <= endDate and end date >= startDate\n'
-        '      set eventTitle to summary of evt\n'
-        '      exit repeat\n'
-        '    end try\n'
-        '  end repeat\n'
-        'end tell\n'
-        'return eventTitle'
-    )
-    try:
-        out = subprocess.check_output(["osascript", "-e", script], timeout=5)
-        title = out.decode("utf-8").strip()
-        return title or None
-    except Exception as exc:  # pragma: no cover - environment dependent
-        print(f"Failed to read Calendar event: {exc}")
+
+    cmd = shutil.which("icalBuddy")
+    if not cmd:
         return None
+
+    try:
+        out = subprocess.check_output(
+            [cmd, "-n", "-eep", "*", "-b", "", "eventsNow"], timeout=5
+        )
+        line = out.decode("utf-8").strip()
+        if line:
+            return line.lstrip("•").strip()
+    except Exception as exc:  # pragma: no cover - environment dependent
+        print(f"Failed to read Calendar event via icalBuddy: {exc}")
+    return None
 
 def record_audio(output_file, device, duration=None):
 # ffmpeg -f avfoundation -i ":0" -ar 48000 -ac 2 -sample_fmt s16
