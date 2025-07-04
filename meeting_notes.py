@@ -7,6 +7,7 @@ import shutil
 import platform
 import urllib.parse
 import argparse
+import re
 import torch
 
 try:
@@ -39,6 +40,41 @@ def language_name(code):
 def load_config(path):
     with open(path, 'r') as f:
         return json.load(f)
+
+
+def sanitize_name(name):
+    """Return a filesystem-safe version of ``name``."""
+    if not name:
+        return None
+    safe = re.sub(r"[^\w\-. ]", "_", name).strip()
+    return safe or None
+
+
+def get_calendar_event_title():
+    """Return the title of the current Calendar event on macOS, if any."""
+    if platform.system() != "Darwin":
+        return None
+    script = (
+        'set eventTitle to ""\n'
+        'tell application "Calendar"\n'
+        '  set nowDate to current date\n'
+        '  repeat with cal in calendars\n'
+        '    set evts to (events of cal whose start date <= nowDate and end date > nowDate)\n'
+        '    if (count of evts) > 0 then\n'
+        '      set eventTitle to summary of item 1 of evts\n'
+        '      exit repeat\n'
+        '    end if\n'
+        '  end repeat\n'
+        'end tell\n'
+        'return eventTitle'
+    )
+    try:
+        out = subprocess.check_output(["osascript", "-e", script])
+        title = out.decode("utf-8").strip()
+        return title or None
+    except Exception as exc:  # pragma: no cover - environment dependent
+        print(f"Failed to read Calendar event: {exc}")
+        return None
 
 def record_audio(output_file, device, duration=None):
 # ffmpeg -f avfoundation -i ":0" -ar 48000 -ac 2 -sample_fmt s16
@@ -269,7 +305,10 @@ def main(argv=None):
                     shutil.copy(args.audio_file, audio_file)
         else:
             ts = datetime.now().strftime("%Y.%m.%d_%H.%M")
-            base_name = f"meeting_{ts}"
+            event_title = None
+            if cfg.get("use_calendar_title"):
+                event_title = sanitize_name(get_calendar_event_title())
+            base_name = event_title or f"meeting_{ts}"
             meeting_dir = os.path.join(base_dir, base_name)
             os.makedirs(meeting_dir, exist_ok=True)
             audio_file = os.path.join(meeting_dir, f"recording_{ts}.wav")
