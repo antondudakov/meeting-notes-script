@@ -16,6 +16,6 @@
   "output_dir": "/Users/bwdude/Documents/obsidian-vault/meetings",
   "keep_audio": false,
   "open_notes": false,
-  "post_save_command": "open \"obsidian://open?vault=obsidian-vault&file={url}\"",
-  "use_calendar_title": false
+  "post_save_command": "open \"obsidian://open?vault=obsidian-vault&file={relative_url}\"",
+  "use_calendar_title": true
 }
