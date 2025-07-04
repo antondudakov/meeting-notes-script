@@ -15,12 +15,26 @@ except ImportError:
     raise SystemExit("openai is required. Install with `pip install openai`")
 
 try:
+    import pycountry
+except ImportError:
+    pycountry = None
+
+try:
     import whisper
 except ImportError:
     raise SystemExit("whisper is required. Install with `pip install -U openai-whisper`")
 
 
 CONFIG_PATH = os.environ.get("MEETING_SETTINGS", "settings.json")
+
+
+def language_name(code):
+    """Return the full language name for an ISO 639-1 code."""
+    if pycountry:
+        lang = pycountry.languages.get(alpha_2=code)
+        if lang and hasattr(lang, "name"):
+            return lang.name
+    return code
 
 def load_config(path):
     with open(path, 'r') as f:
@@ -97,6 +111,7 @@ def transcribe_audio(
     return result["text"].strip()
 
 def summarize_text(text, sentences=5, provider="openai", model="gpt-3.5-turbo", language="en"):
+    lang_name = language_name(language)
     if provider == "openai":
         api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key:
@@ -106,8 +121,8 @@ def summarize_text(text, sentences=5, provider="openai", model="gpt-3.5-turbo", 
             "Summarize the following meeting transcript. "
             "- First, provide a concise summary in bullet points. "
             "- Then, list all action items separately, each with the responsible person (if mentioned). "
-            f"The most probably meeting language code is {language}. "
-            "Your answer should be in the language of the meeting."
+            f"The most probable meeting language code is {lang_name}. "
+            f"Write the answer in {lang_name}."
         )
         response = client.chat.completions.create(
             model=model,
@@ -128,7 +143,8 @@ def summarize_text(text, sentences=5, provider="openai", model="gpt-3.5-turbo", 
         genai.configure(api_key=api_key)
         prompt = (
             "Summarize the following meeting transcript into "
-            f"{sentences} concise bullet points."
+            f"{sentences} concise bullet points. "
+            f"Write the answer in {lang_name}."
         )
         model_name = model or "gemini-pro"
         generative_model = genai.GenerativeModel(model_name)
@@ -287,6 +303,7 @@ def main(argv=None):
             cfg.get("summary_sentences", 5),
             provider,
             cfg.get(model_key, "gpt-3.5-turbo" if provider == "openai" else "gemini-pro"),
+            cfg.get("language", "en"),
         )
         links = [f"[Transcript]({os.path.basename(transcript_path)})"]
         if cfg.get("keep_audio", True) and audio_file:

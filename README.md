@@ -40,7 +40,7 @@ This repository provides a simple Python script for recording a meeting on macOS
    The remaining commands assume the virtual environment is active.
 5. Install Python dependencies (run inside the virtual environment):
    ```bash
-    pip install -U openai-whisper openai numpy nltk google-generativeai
+    pip install -U openai-whisper openai numpy nltk google-generativeai pycountry
    ```
    Download NLTK data for tokenization:
    ```bash
@@ -89,7 +89,7 @@ This repository provides a simple Python script for recording a meeting on macOS
 - `transcription_backend` – `whisper` (Python implementation) or `whispercpp`.
 - `whispercpp_binary` – path to the compiled `whisper-cli` executable.
 - `whispercpp_model` – path to the Whisper model file in ggml format.
-- `language` – ISO language code used by Whisper (e.g., `ru`, `en`).
+- `language` – ISO language code used by Whisper (e.g., `ru`, `en`). Generated notes use this language. The script converts it to a full language name when prompting the LLM.
 - `summary_sentences` – number of sentences to include in the generated notes.
 - `output_format` – `text` or `markdown` for notes output.
 - `llm_provider` – `openai` or `gemini` for summarization.
@@ -146,7 +146,7 @@ You can add a menu bar shortcut to run the script with one click:
 
 - Capturing system audio from Google Meet may require a virtual audio driver such as BlackHole. Select the device in `settings.json`.
 - Whisper models are downloaded automatically when first used; make sure you have sufficient disk space.
-- Set `language` to `ru` in `settings.json` to generate transcripts and summaries in Russian.
+- Set `language` to `ru` in `settings.json` to generate transcripts and notes in Russian.
 - Set the `OPENAI_API_KEY` environment variable to use OpenAI-based summarization.
 - Set the `GOOGLE_API_KEY` environment variable to use Gemini-based summarization.
 
