@@ -58,18 +58,20 @@ def get_calendar_event_title():
         'set eventTitle to ""\n'
         'tell application "Calendar"\n'
         '  set nowDate to current date\n'
+        '  set startDate to nowDate - (1 * minutes)\n'
+        '  set endDate to nowDate + (1 * minutes)\n'
         '  repeat with cal in calendars\n'
-        '    set evts to (events of cal whose start date <= nowDate and end date > nowDate)\n'
-        '    if (count of evts) > 0 then\n'
-        '      set eventTitle to summary of item 1 of evts\n'
+        '    try\n'
+        '      set evt to first event of cal whose start date <= endDate and end date >= startDate\n'
+        '      set eventTitle to summary of evt\n'
         '      exit repeat\n'
-        '    end if\n'
+        '    end try\n'
         '  end repeat\n'
         'end tell\n'
         'return eventTitle'
     )
     try:
-        out = subprocess.check_output(["osascript", "-e", script])
+        out = subprocess.check_output(["osascript", "-e", script], timeout=5)
         title = out.decode("utf-8").strip()
         return title or None
     except Exception as exc:  # pragma: no cover - environment dependent
