@@ -234,7 +234,7 @@ def main(argv=None):
                 if os.path.abspath(audio_file) != os.path.abspath(args.audio_file):
                     shutil.copy(args.audio_file, audio_file)
         else:
-            ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+            ts = datetime.now().strftime("%Y.%m.%d_%H.%M")
             base_name = f"meeting_{ts}"
             meeting_dir = os.path.join(base_dir, base_name)
             os.makedirs(meeting_dir, exist_ok=True)
