@@ -12,5 +12,7 @@
   "gemini_model": "gemini-pro",
   "output_format": "markdown",
   "output_dir": "/Users/bwdude/Documents/obsidian-vault/meetings",
-  "keep_audio": false
+  "keep_audio": false,
+  "open_notes": true,
+  "post_save_command": "open \"obsidian://open?vault=obsidian-vault&file={url}\""
 }
