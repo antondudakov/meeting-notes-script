@@ -156,11 +156,29 @@ def open_file(path):
     except Exception as exc:  # pragma: no cover - user environment dependent
         print(f"Failed to open file {path}: {exc}")
 
-def run_post_save_command(cmd, path):
-    """Run a shell command after saving notes."""
+def run_post_save_command(cmd, path, base_dir):
+    """Run a shell command after saving notes.
+
+    The command can use the following placeholders:
+    ``{path}``          – absolute path to the notes file.
+    ``{url}``           – URL-encoded absolute path.
+    ``{relative}``      – path relative to the parent of ``base_dir``.
+    ``{relative_url}``  – URL-encoded relative path.
+    """
+
     url = urllib.parse.quote(path)
+    relative = os.path.relpath(path, os.path.dirname(base_dir))
+    relative_url = urllib.parse.quote(relative)
     try:
-        subprocess.run(cmd.format(path=path, url=url), shell=True)
+        subprocess.run(
+            cmd.format(
+                path=path,
+                url=url,
+                relative=relative,
+                relative_url=relative_url,
+            ),
+            shell=True,
+        )
     except Exception as exc:  # pragma: no cover - user environment dependent
         print(f"Failed to run post-save command: {exc}")
 
@@ -287,7 +305,11 @@ def main(argv=None):
         save_output(notes_content, notes_path, cfg.get("output_format", "text"))
         print(f"Notes saved to {notes_path}")
         if cfg.get("post_save_command"):
-            run_post_save_command(cfg.get("post_save_command"), notes_path)
+            run_post_save_command(
+                cfg.get("post_save_command"),
+                notes_path,
+                base_dir,
+            )
         elif cfg.get("open_notes", False):
             open_file(notes_path)
     finally:
