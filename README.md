@@ -10,6 +10,7 @@ This repository provides a simple Python script for recording a meeting on macOS
  - Compiled `whisper-cli` from [`ggml-org/whisper.cpp`](https://github.com/ggml-org/whisper.cpp) if you want to use the whispercpp backend.
 - A virtual audio device such as **BlackHole** is required if you want to capture sound coming from the browser. Without it the script only records your microphone.
 - [`switchaudio-osx`](https://github.com/deweller/switchaudio-osx) is required for automatic switching of input/output devices (optional).
+- [`icalBuddy`](https://github.com/ali-rantakari/icalBuddy) is used to read the current Calendar event title when `use_calendar_title` is enabled (optional).
 
 ## Installation
 
@@ -108,7 +109,9 @@ This repository provides a simple Python script for recording a meeting on macOS
   its encoded form. Example for opening the notes in Obsidian on macOS:
   `open "obsidian://open?vault=obsidian-vault&file={relative_url}"`.
 - `use_calendar_title` – if `true` on macOS, the script uses the current
-  Calendar event title for the output folder name instead of a timestamp.
+  Calendar event title for the output folder name instead of a timestamp. This
+  requires the [`icalBuddy`](https://github.com/ali-rantakari/icalBuddy) utility
+  to be installed.
 
 
 ## Capturing Browser and Microphone Audio with BlackHole
