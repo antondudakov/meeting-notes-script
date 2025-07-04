@@ -99,11 +99,13 @@ This repository provides a simple Python script for recording a meeting on macOS
 - `keep_audio` – set to `false` to delete the recording after transcription.
 - `open_notes` – automatically open the saved notes file with the OS default
   application when the run completes.
-- `post_save_command` – optional shell command run after saving notes. The
-  placeholders `{path}` and `{url}` are replaced with the notes file path and a
-  URL-encoded version of the path respectively. Example for opening the notes in
-  Obsidian on macOS:
-  `open "obsidian://open?vault=obsidian-vault&file={url}"`.
+`post_save_command` – optional shell command run after saving notes. The
+  placeholders `{path}` and `{url}` are replaced with the absolute notes path
+  and its URL-encoded form. Two additional placeholders `{relative}` and
+  `{relative_url}` provide the path relative to the parent of `output_dir` and
+  its encoded form. Example for opening the notes in Obsidian on macOS:
+  `open "obsidian://open?vault=obsidian-vault&file={relative_url}"`.
+
 
 ## Capturing Browser and Microphone Audio with BlackHole
 
