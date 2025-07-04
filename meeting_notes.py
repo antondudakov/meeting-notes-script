@@ -306,7 +306,7 @@ def main(argv=None):
                 if os.path.abspath(audio_file) != os.path.abspath(args.audio_file):
                     shutil.copy(args.audio_file, audio_file)
         else:
-            ts = datetime.now().strftime("%Y.%m.%d_%H.%M")
+            ts = datetime.now().strftime("%Y.%m.%d_%a_%H-%M")
             event_title = None
             if cfg.get("use_calendar_title"):
                 event_title = sanitize_name(get_calendar_event_title())
