@@ -85,6 +85,13 @@ This repository provides a simple Python script for recording a meeting on macOS
 - `gemini_model` – Gemini model name (default `gemini-pro`).
 - `output_dir` – root folder where meeting subfolders are created.
 - `keep_audio` – set to `false` to delete the recording after transcription.
+- `open_notes` – automatically open the saved notes file with the OS default
+  application when the run completes.
+- `post_save_command` – optional shell command run after saving notes. The
+  placeholders `{path}` and `{url}` are replaced with the notes file path and a
+  URL-encoded version of the path respectively. Example for opening the notes in
+  Obsidian on macOS:
+  `open "obsidian://open?vault=obsidian-vault&file={url}"`.
 
 ## Capturing Browser and Microphone Audio with BlackHole
 

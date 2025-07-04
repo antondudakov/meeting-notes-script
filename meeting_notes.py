@@ -4,6 +4,8 @@ import subprocess
 import signal
 from datetime import datetime
 import shutil
+import platform
+import urllib.parse
 import torch
 
 try:
@@ -140,6 +142,27 @@ def save_output(text, path, fmt="text"):
     with open(path, 'w') as f:
         f.write(text)
 
+def open_file(path):
+    """Open ``path`` with the default application for the OS."""
+    system = platform.system()
+    try:
+        if system == "Darwin":
+            subprocess.run(["open", path])
+        elif system == "Windows":
+            os.startfile(path)
+        else:
+            subprocess.run(["xdg-open", path])
+    except Exception as exc:  # pragma: no cover - user environment dependent
+        print(f"Failed to open file {path}: {exc}")
+
+def run_post_save_command(cmd, path):
+    """Run a shell command after saving notes."""
+    url = urllib.parse.quote(path)
+    try:
+        subprocess.run(cmd.format(path=path, url=url), shell=True)
+    except Exception as exc:  # pragma: no cover - user environment dependent
+        print(f"Failed to run post-save command: {exc}")
+
 def switch_audio_sources(input_source=None, output_source=None):
     """Switch macOS audio input/output using SwitchAudioSource.
 
@@ -238,6 +261,10 @@ def main():
         )
         save_output(notes_content, notes_path, cfg.get("output_format", "text"))
         print(f"Notes saved to {notes_path}")
+        if cfg.get("post_save_command"):
+            run_post_save_command(cfg.get("post_save_command"), notes_path)
+        elif cfg.get("open_notes", False):
+            open_file(notes_path)
     finally:
         restore_audio_sources(prev_in, prev_out)
 
