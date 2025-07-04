@@ -61,11 +61,17 @@ def get_calendar_event_title():
 
     try:
         out = subprocess.check_output(
-            [cmd, "-n", "-eep", "*", "-b", "", "eventsNow"], timeout=5
+            [cmd, "-n", "-eep", "*", "-b", "", "-ea", "-nc", "eventsNow"], timeout=5
         )
+
         line = out.decode("utf-8").strip()
+
         if line:
-            return line.lstrip("•").strip()
+            all_events = line.split('\n')
+            last = all_events[-1]
+
+            return last.lstrip("•").strip()
+            
     except Exception as exc:  # pragma: no cover - environment dependent
         print(f"Failed to read Calendar event via icalBuddy: {exc}")
     return None
