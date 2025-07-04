@@ -55,14 +55,26 @@ This repository provides a simple Python script for recording a meeting on macOS
    python meeting_notes.py
    ```
    Press **Ctrl+C** to stop recording before the configured maximum duration if needed.
-3. The script records your meeting, transcribes the audio with Whisper, and summarizes the transcript using an LLM (OpenAI or Gemini). Each run creates a new folder inside the directory specified by `output_dir`, storing the audio, transcript, and notes for that meeting.
-   Example structure:
+   You can also skip recording and pass an existing audio file:
+   ```bash
+   python meeting_notes.py path/to/audio.wav
+   ```
+3. The script records (or processes the provided file), transcribes the audio with Whisper, and summarizes the transcript using an LLM (OpenAI or Gemini). Each run creates a new folder inside the directory specified by `output_dir`, storing the audio, transcript, and notes for that meeting. When an audio file is provided, its name is used for the folder and output files.
+   Example structure when recording:
    ```
    output/
    output/meeting_20250703_104658/
    output/meeting_20250703_104658/notes_20250703_104658.md
    output/meeting_20250703_104658/recording_20250703_104658.wav
    output/meeting_20250703_104658/transcript_20250703_104658.txt
+   ```
+   Example structure when providing `team_sync.wav`:
+   ```
+   output/
+   output/team_sync/
+   output/team_sync/notes_team_sync.md
+   output/team_sync/team_sync.wav  # only if `keep_audio` is true
+   output/team_sync/transcript_team_sync.txt
    ```
 
 ## Configuration
