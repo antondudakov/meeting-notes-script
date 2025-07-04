@@ -6,6 +6,7 @@ from datetime import datetime
 import shutil
 import platform
 import urllib.parse
+import argparse
 import torch
 
 try:
@@ -202,7 +203,18 @@ def restore_audio_sources(prev_input=None, prev_output=None):
     if prev_output:
         subprocess.run([cmd, "-t", "output", "-s", prev_output])
 
-def main():
+def parse_args(argv=None):
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "audio_file",
+        nargs="?",
+        help="use existing audio file instead of recording",
+    )
+    return parser.parse_args(argv)
+
+
+def main(argv=None):
+    args = parse_args(argv)
     cfg = load_config(CONFIG_PATH)
     base_dir = cfg.get("output_dir", "output")
     os.makedirs(base_dir, exist_ok=True)
@@ -211,28 +223,41 @@ def main():
         cfg.get("input_source"), cfg.get("output_source")
     )
     try:
-        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-        meeting_dir = os.path.join(base_dir, f"meeting_{ts}")
-        os.makedirs(meeting_dir, exist_ok=True)
-        audio_file = os.path.join(meeting_dir, f"recording_{ts}.wav")
-        print(f"Recording audio to {audio_file} ...")
-        record_audio(
-            audio_file,
-            cfg.get("audio_device", "0"),
-            cfg.get("duration_seconds", 60),
-        )
+        if args.audio_file:
+            base_name = os.path.splitext(os.path.basename(args.audio_file))[0]
+            meeting_dir = os.path.join(base_dir, base_name)
+            os.makedirs(meeting_dir, exist_ok=True)
+            audio_src = args.audio_file
+            audio_file = None
+            if cfg.get("keep_audio", True):
+                audio_file = os.path.join(meeting_dir, os.path.basename(args.audio_file))
+                if os.path.abspath(audio_file) != os.path.abspath(args.audio_file):
+                    shutil.copy(args.audio_file, audio_file)
+        else:
+            ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+            base_name = f"meeting_{ts}"
+            meeting_dir = os.path.join(base_dir, base_name)
+            os.makedirs(meeting_dir, exist_ok=True)
+            audio_file = os.path.join(meeting_dir, f"recording_{ts}.wav")
+            audio_src = audio_file
+            print(f"Recording audio to {audio_file} ...")
+            record_audio(
+                audio_file,
+                cfg.get("audio_device", "0"),
+                cfg.get("duration_seconds", 60),
+            )
 
         print("Transcribing ...")
         lang = cfg.get("language", "en")
         transcript = transcribe_audio(
-            audio_file,
+            audio_src,
             cfg.get("transcription_model", "base"),
             lang,
             cfg.get("transcription_backend", "whisper"),
             cfg.get("whispercpp_binary"),
             cfg.get("whispercpp_model"),
         )
-        transcript_path = os.path.join(meeting_dir, f"transcript_{ts}.txt")
+        transcript_path = os.path.join(meeting_dir, f"transcript_{base_name}.txt")
         save_output(transcript, transcript_path, "text")
         print(f"Transcript saved to {transcript_path}")
 
@@ -246,7 +271,7 @@ def main():
             cfg.get(model_key, "gpt-3.5-turbo" if provider == "openai" else "gemini-pro"),
         )
         links = [f"[Transcript]({os.path.basename(transcript_path)})"]
-        if cfg.get("keep_audio", True):
+        if cfg.get("keep_audio", True) and audio_file:
             links.append(f"[Audio]({os.path.basename(audio_file)})")
         notes_content = (
             notes_summary
@@ -257,7 +282,7 @@ def main():
         )
         notes_path = os.path.join(
             meeting_dir,
-            f"notes_{ts}.md" if cfg.get("output_format", "text") == "markdown" else f"notes_{ts}.txt",
+            f"notes_{base_name}.md" if cfg.get("output_format", "text") == "markdown" else f"notes_{base_name}.txt",
         )
         save_output(notes_content, notes_path, cfg.get("output_format", "text"))
         print(f"Notes saved to {notes_path}")
@@ -268,7 +293,7 @@ def main():
     finally:
         restore_audio_sources(prev_in, prev_out)
 
-    if not cfg.get("keep_audio", True):
+    if audio_file and not args.audio_file and not cfg.get("keep_audio", True):
         try:
             os.remove(audio_file)
             print(f"Deleted audio file {audio_file}")
