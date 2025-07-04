@@ -60,6 +60,8 @@ This repository provides a simple Python script for recording a meeting on macOS
    python meeting_notes.py path/to/audio.wav
    ```
 3. The script records (or processes the provided file), transcribes the audio with Whisper, and summarizes the transcript using an LLM (OpenAI or Gemini). Each run creates a new folder inside the directory specified by `output_dir`, storing the audio, transcript, and notes for that meeting. When an audio file is provided, its name is used for the folder and output files.
+   If `use_calendar_title` is enabled on macOS, the current Calendar event title
+   is used for the folder name instead of a timestamp.
    Example structure when recording:
    ```
    output/
@@ -105,6 +107,8 @@ This repository provides a simple Python script for recording a meeting on macOS
   `{relative_url}` provide the path relative to the parent of `output_dir` and
   its encoded form. Example for opening the notes in Obsidian on macOS:
   `open "obsidian://open?vault=obsidian-vault&file={relative_url}"`.
+- `use_calendar_title` – if `true` on macOS, the script uses the current
+  Calendar event title for the output folder name instead of a timestamp.
 
 
 ## Capturing Browser and Microphone Audio with BlackHole
