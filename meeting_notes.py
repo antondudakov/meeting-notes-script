@@ -88,7 +88,7 @@ def transcribe_audio(
             raise SystemExit(
                 "whisper-cli not found. Build whisper.cpp and set 'whispercpp_binary' in settings.json"
             )
-        return out.decode().strip()
+        return out.decode("utf-8", errors="replace").strip()
 
     device = "mps" if torch.has_mps else "cpu"
     model = whisper.load_model(model_size, device=device)
