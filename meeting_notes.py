@@ -295,23 +295,19 @@ def main(argv=None):
     try:
         if args.audio_file:
             base_name = os.path.splitext(os.path.basename(args.audio_file))[0]
-            meeting_dir = os.path.join(base_dir, base_name)
-            os.makedirs(meeting_dir, exist_ok=True)
+            suffix = sanitize_name(base_name)
+            meeting_dir = os.path.dirname(os.path.abspath(args.audio_file))
             audio_src = args.audio_file
-            audio_file = None
-            if cfg.get("keep_audio", True):
-                audio_file = os.path.join(meeting_dir, os.path.basename(args.audio_file))
-                if os.path.abspath(audio_file) != os.path.abspath(args.audio_file):
-                    shutil.copy(args.audio_file, audio_file)
+            audio_file = args.audio_file
         else:
-            ts = datetime.now().strftime("%Y.%m.%d_%a_%H-%M")
+            suffix = datetime.now().strftime("%Y.%m.%d_%a_%H-%M")
             event_title = None
             if cfg.get("use_calendar_title"):
                 event_title = sanitize_name(get_calendar_event_title())
-            base_name = event_title or f"meeting_{ts}"
+            base_name = event_title or f"meeting_{suffix}"
             meeting_dir = os.path.join(base_dir, base_name)
             os.makedirs(meeting_dir, exist_ok=True)
-            audio_file = os.path.join(meeting_dir, f"recording_{ts}.wav")
+            audio_file = os.path.join(meeting_dir, f"recording_{suffix}.wav")
             audio_src = audio_file
             print(f"Recording audio to {audio_file} ...")
             record_audio(
@@ -330,7 +326,7 @@ def main(argv=None):
             cfg.get("whispercpp_binary"),
             cfg.get("whispercpp_model"),
         )
-        transcript_path = os.path.join(meeting_dir, f"transcript_{ts}.txt")
+        transcript_path = os.path.join(meeting_dir, f"transcript_{suffix}.txt")
         save_output(transcript, transcript_path, "text")
         print(f"Transcript saved to {transcript_path}")
 
@@ -358,10 +354,13 @@ def main(argv=None):
             + "\n\n## Transcript\n\n"
             + transcript
         )
-        notes_path = os.path.join(
-            meeting_dir,
-            f"notes_{ts}.md" if cfg.get("output_format", "text") == "markdown" else f"notes_{ts}.txt",
+
+        notes_filename = (
+            f"notes_{suffix}.md"
+            if cfg.get("output_format", "text") == "markdown"
+            else f"notes_{suffix}.txt"
         )
+        notes_path = os.path.join(meeting_dir, notes_filename)
         save_output(notes_content, notes_path, cfg.get("output_format", "text"))
         print(f"Notes saved to {notes_path}")
         if cfg.get("post_save_command"):

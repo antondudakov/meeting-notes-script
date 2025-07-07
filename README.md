@@ -60,7 +60,7 @@ This repository provides a simple Python script for recording a meeting on macOS
    ```bash
    python meeting_notes.py path/to/audio.wav
    ```
-3. The script records (or processes the provided file), transcribes the audio with Whisper, and summarizes the transcript using an LLM (OpenAI or Gemini). Each run creates a new folder inside the directory specified by `output_dir`, storing the audio, transcript, and notes for that meeting. When an audio file is provided, its name is used for the folder and output files.
+3. The script records (or processes the provided file), transcribes the audio with Whisper, and summarizes the transcript using an LLM (OpenAI or Gemini). Each run creates a new folder inside the directory specified by `output_dir`, storing the audio and transcript. When you pass an existing audio file, the script uses its directory for all output files and appends the sanitized filename to the notes and transcript.
    If `use_calendar_title` is enabled on macOS, the current Calendar event title
    is used for the folder name instead of a timestamp.
    Example structure when recording:
@@ -73,11 +73,9 @@ This repository provides a simple Python script for recording a meeting on macOS
    ```
    Example structure when providing `team_sync.wav`:
    ```
-   output/
-   output/team_sync/
-   output/team_sync/notes_team_sync.md
-   output/team_sync/team_sync.wav  # only if `keep_audio` is true
-   output/team_sync/transcript_team_sync.txt
+   path/to/team_sync.wav
+   path/to/notes_team_sync.md
+   path/to/transcript_team_sync.txt
    ```
 
 ## Configuration
