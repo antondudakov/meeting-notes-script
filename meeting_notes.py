@@ -318,6 +318,7 @@ def main(argv=None):
 
         print("Transcribing ...")
         lang = cfg.get("language", "en")
+
         transcript = transcribe_audio(
             audio_src,
             cfg.get("transcription_model", "base"),
@@ -326,9 +327,6 @@ def main(argv=None):
             cfg.get("whispercpp_binary"),
             cfg.get("whispercpp_model"),
         )
-        transcript_path = os.path.join(meeting_dir, f"transcript_{suffix}.txt")
-        save_output(transcript, transcript_path, "text")
-        print(f"Transcript saved to {transcript_path}")
 
         print("Summarizing transcript with LLM ...")
         provider = cfg.get("llm_provider", "openai")
@@ -342,15 +340,15 @@ def main(argv=None):
             cfg.get("language", "en"),
         )
 
-        links = [f"[Transcript]({os.path.basename(transcript_path)})"]
+        links = ""
 
         if cfg.get("keep_audio", True) and audio_file:
-            links.append(f"[Audio]({os.path.basename(audio_file)})")
+            links = f"[Audio]({os.path.basename(audio_file)})"
 
         notes_content = (
             notes_summary
             + "\n\n"
-            + " | ".join(links)
+            + links
             + "\n\n## Transcript\n\n"
             + transcript
         )
@@ -360,9 +358,11 @@ def main(argv=None):
             if cfg.get("output_format", "text") == "markdown"
             else f"notes_{suffix}.txt"
         )
+        
         notes_path = os.path.join(meeting_dir, notes_filename)
         save_output(notes_content, notes_path, cfg.get("output_format", "text"))
         print(f"Notes saved to {notes_path}")
+
         if cfg.get("post_save_command"):
             run_post_save_command(
                 cfg.get("post_save_command"),
