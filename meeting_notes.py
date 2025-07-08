@@ -316,6 +316,9 @@ def main(argv=None):
                 cfg.get("duration_seconds", 60),
             )
 
+
+        restore_audio_sources(prev_in, prev_out)
+
         print("Transcribing ...")
         lang = cfg.get("language", "en")
 
