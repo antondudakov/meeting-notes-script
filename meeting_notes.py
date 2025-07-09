@@ -76,6 +76,39 @@ def get_calendar_event_title():
         print(f"Failed to read Calendar event via icalBuddy: {exc}")
     return None
 
+
+def get_avfoundation_device_index(name):
+    """Return the FFmpeg avfoundation device index matching ``name``."""
+    cmd = ["ffmpeg", "-f", "avfoundation", "-list_devices", "true", "-i", ""]
+    try:
+        proc = subprocess.run(cmd, capture_output=True, text=True)
+    except FileNotFoundError:
+        print("ffmpeg not found for device lookup")
+        return None
+    output = proc.stdout + proc.stderr
+    audio = False
+    for line in output.splitlines():
+        if "AVFoundation audio devices" in line:
+            audio = True
+            continue
+        if audio:
+            m = re.search(r"\[(\d+)\]\s*(.+)", line)
+            if m:
+                idx, dev_name = m.groups()
+                if dev_name.strip().strip('"').lower() == name.lower():
+                    return idx
+    return None
+
+
+def audio_device_index(device):
+    """Return the avfoundation index for ``device`` name or number."""
+    if isinstance(device, int) or (isinstance(device, str) and device.isdigit()):
+        return str(device)
+    idx = get_avfoundation_device_index(str(device))
+    if idx is None:
+        raise RuntimeError(f"Audio device '{device}' not found")
+    return idx
+
 def record_audio(output_file, device, duration=None):
 # ffmpeg -f avfoundation -i ":0" -ar 48000 -ac 2 -sample_fmt s16
     cmd = [
@@ -312,7 +345,7 @@ def main(argv=None):
             print(f"Recording audio to {audio_file} ...")
             record_audio(
                 audio_file,
-                cfg.get("audio_device", "0"),
+                audio_device_index(cfg.get("audio_device", "0")),
                 cfg.get("duration_seconds", 60),
             )
 
