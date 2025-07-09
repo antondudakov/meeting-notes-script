@@ -1,5 +1,5 @@
 {
-  "audio_device": "1",
+  "audio_device": "Mixed Input",
   "input_source": "Mixed Input",
   "output_source": "Mixed Output",
   "duration_seconds": 5400,

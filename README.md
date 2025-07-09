@@ -82,7 +82,8 @@ This repository provides a simple Python script for recording a meeting on macOS
 
 `settings.json` options:
 
-- `audio_device` – device index for ffmpeg (macOS `avfoundation`).
+- `audio_device` – audio device name for ffmpeg (macOS `avfoundation`). The
+  script automatically looks up the corresponding device index.
 - `input_source` – name of the macOS input device to select before recording.
 - `output_source` – name of the macOS output device to select before recording.
 - `duration_seconds` – max recording length in seconds. Set to `0` to record until you press **Ctrl+C**.
@@ -126,12 +127,13 @@ This repository provides a simple Python script for recording a meeting on macOS
    - An **Aggregate Device** that combines your microphone with **BlackHole**.
 3. In the browser or meeting app, select the Aggregate Device as the microphone
    and choose the Multi-Output Device for output.
-4. List available devices to find the index of the Aggregate Device:
+4. List available devices to find the name of the Aggregate Device:
    ```bash
    ffmpeg -f avfoundation -list_devices true -i ""
    ```
-   Use the displayed index for `audio_device` in `settings.json`.
-   Recording will then include audio from the browser and your microphone.
+   Use the displayed name for `audio_device` in `settings.json`.
+   The script will resolve the index automatically so recording includes audio
+   from the browser and your microphone.
 
 ## Creating an Apple Shortcut for Quick Recording
 
