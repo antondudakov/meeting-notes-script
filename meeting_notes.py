@@ -110,7 +110,6 @@ def audio_device_index(device):
     return idx
 
 def record_audio(output_file, device, duration=None):
-# ffmpeg -f avfoundation -i ":0" -ar 48000 -ac 2 -sample_fmt s16
     cmd = [
         "ffmpeg",
         "-y",
@@ -119,20 +118,20 @@ def record_audio(output_file, device, duration=None):
         "-i",
         f":{device}",
         "-ar",
-        "48000",
+        "44100",
         "-ac",
         "2",
         "-sample_fmt",
         "s16"
     ]
 
-    print(f"{cmd}")
-
     if duration and duration > 0:
         cmd += ["-t", str(duration)]
     cmd.append(output_file)
     proc = subprocess.Popen(cmd)
+    print(f"{cmd}")
     print("Press Ctrl+C to stop recording ...")
+
     try:
         proc.wait()
     except KeyboardInterrupt:
@@ -165,7 +164,9 @@ def transcribe_audio(
             language,
             "-nt",
             "-np",
+            "-di",
         ]
+
         try:
             out = subprocess.check_output(cmd, stderr=subprocess.DEVNULL)
         except FileNotFoundError:
