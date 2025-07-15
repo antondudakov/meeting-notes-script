@@ -197,7 +197,7 @@ def summarize_text(
         name_hint = f" titled '{meeting_name}'" if meeting_name else ""
         prompt = (
             f"Summarize the following meeting transcript{name_hint}. "
-            "- First, provide a concise summary in bullet points. "
+            "- First, provide a concise summary in bullet points. If someone explains something - add this explnation in short. "
             "- Then, list all action items separately, each with the responsible person (if mentioned). "
             f"The most probable meeting language code is {lang_name}. "
             f"Write the answer in {lang_name}."
