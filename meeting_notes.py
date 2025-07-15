@@ -180,15 +180,23 @@ def transcribe_audio(
     result = model.transcribe(audio_path, language=language)
     return result["text"].strip()
 
-def summarize_text(text, sentences=5, provider="openai", model="gpt-3.5-turbo", language="en"):
+def summarize_text(
+    text,
+    sentences=5,
+    provider="openai",
+    model="gpt-3.5-turbo",
+    language="en",
+    meeting_name=None,
+):
     lang_name = language_name(language)
     if provider == "openai":
         api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key:
             raise RuntimeError("OPENAI_API_KEY environment variable not set")
         client = openai.OpenAI(api_key=api_key)
+        name_hint = f" titled '{meeting_name}'" if meeting_name else ""
         prompt = (
-            "Summarize the following meeting transcript. "
+            f"Summarize the following meeting transcript{name_hint}. "
             "- First, provide a concise summary in bullet points. "
             "- Then, list all action items separately, each with the responsible person (if mentioned). "
             f"The most probable meeting language code is {lang_name}. "
@@ -211,8 +219,9 @@ def summarize_text(text, sentences=5, provider="openai", model="gpt-3.5-turbo", 
         if not api_key:
             raise RuntimeError("GOOGLE_API_KEY environment variable not set")
         genai.configure(api_key=api_key)
+        name_hint = f" titled '{meeting_name}'" if meeting_name else ""
         prompt = (
-            "Summarize the following meeting transcript into "
+            f"Summarize the following meeting transcript{name_hint} into "
             f"{sentences} concise bullet points. "
             f"Write the answer in {lang_name}."
         )
@@ -375,6 +384,7 @@ def main(argv=None):
             provider,
             cfg.get(model_key, "gpt-3.5-turbo" if provider == "openai" else "gemini-pro"),
             cfg.get("language", "en"),
+            meeting_name=base_name,
         )
 
         links = ""

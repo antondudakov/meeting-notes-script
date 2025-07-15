@@ -75,8 +75,12 @@ This repository provides a simple Python script for recording a meeting on macOS
    ```
    path/to/team_sync.wav
    path/to/notes_team_sync.md
-   path/to/transcript_team_sync.txt
-   ```
+  path/to/transcript_team_sync.txt
+  ```
+
+The folder name (taken from the Calendar event title or the provided audio file
+name) is also passed to the language model to help it understand what the
+meeting is about.
 
 ## Configuration
 
@@ -110,7 +114,8 @@ This repository provides a simple Python script for recording a meeting on macOS
 - `use_calendar_title` – if `true` on macOS, the script uses the current
   Calendar event title for the output folder name instead of a timestamp. This
   requires the [`icalBuddy`](https://github.com/ali-rantakari/icalBuddy) utility
-  to be installed.
+  to be installed. The folder name is also provided to the LLM prompt as the
+  meeting title for additional context.
 
 
 ## Capturing Browser and Microphone Audio with BlackHole
