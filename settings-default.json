@@ -2,7 +2,7 @@
   "audio_device": "Mixed Input",
   "input_source": "Mixed Input",
   "output_source": "Mixed Output",
-  "duration_seconds": 5400,
+  "duration_seconds": 10800,
   "transcription_model": "large-v3-turbo",
   "transcription_backend": "whispercpp",
   "whispercpp_binary": "/Users/bwdude/projects/05.opensource/whisper.cpp/build/bin/whisper-cli",

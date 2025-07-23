@@ -13,3 +13,5 @@ __pycache__/
 
 # Output directory
 output/
+
+settings.json
