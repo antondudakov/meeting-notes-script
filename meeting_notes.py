@@ -77,6 +77,73 @@ def get_calendar_event_title():
     return None
 
 
+def get_calendar_event_attendees():
+    """Return a list of attendee display names for the current Calendar event on macOS.
+
+    Uses `icalBuddy` to read attendees for events happening now. Best-effort parsing.
+    Returns an empty list if attendees cannot be determined.
+    """
+    if platform.system() != "Darwin":
+        return []
+
+    cmd = shutil.which("icalBuddy")
+    if not cmd:
+        return []
+
+    try:
+        # Ask icalBuddy for events happening now including attendees, no colors, no bullets before titles
+        out = subprocess.check_output([cmd, "-ea", "-nc", "eventsNow"], timeout=5)
+        text = out.decode("utf-8", errors="replace")
+
+        # Find attendees section of the last listed event
+        lines = [l.rstrip() for l in text.splitlines()]
+        attendees = []
+        # Locate the last 'attendees:' header (allow indentation)
+        last_idx = None
+        for i, line in enumerate(lines):
+            if re.match(r"^\s*attendees:\s*", line, re.IGNORECASE):
+                last_idx = i
+
+        # If found, collect indented bullet items that follow it
+        if last_idx is not None:
+            for j in range(last_idx + 1, len(lines)):
+                line = lines[j]
+                if not line or re.match(r"^\s*[A-Za-z][A-Za-z ]*:\s*", line):
+                    break
+                m = re.match(r"^\s+[•\-\*\t]+\s*(.+?)\s*$", line)
+                if m:
+                    name = m.group(1).strip()
+                    name = re.sub(r"<[^>]+>", "", name)
+                    name = re.sub(r"\([^\)]+\)", "", name).strip()
+                    if name and name.lower() not in ("accepted", "declined"):
+                        attendees.append(name)
+
+        # Fallback: Sometimes attendees are inline like 'attendees: John, Jane'
+        if not attendees:
+            for i, line in enumerate(lines):
+                m = re.match(r"^\s*attendees:\s*(.+)$", line, re.IGNORECASE)
+                if m:
+                    parts = [p.strip() for p in re.split(r",|;", m.group(1)) if p.strip()]
+                    for p in parts:
+                        p = re.sub(r"<[^>]+>", "", p)
+                        p = re.sub(r"\([^\)]+\)", "", p).strip()
+                        if p:
+                            attendees.append(p)
+                    break
+
+        # De-duplicate while preserving order
+        seen = set()
+        uniq = []
+        for a in attendees:
+            if a.lower() not in seen:
+                seen.add(a.lower())
+                uniq.append(a)
+        return uniq
+    except Exception as exc:  # pragma: no cover - environment dependent
+        print(f"Failed to read Calendar attendees via icalBuddy: {exc}")
+        return []
+
+
 def get_avfoundation_device_index(name):
     """Return the FFmpeg avfoundation device index matching ``name``."""
     cmd = ["ffmpeg", "-f", "avfoundation", "-list_devices", "true", "-i", ""]
@@ -182,25 +249,71 @@ def transcribe_audio(
 
 def summarize_text(
     text,
-    sentences=5,
     provider="openai",
     model="gpt-3.5-turbo",
     language="en",
     meeting_name=None,
+    attendees=None,
 ):
     lang_name = language_name(language)
+    attendees = attendees or []
     if provider == "openai":
         api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key:
             raise RuntimeError("OPENAI_API_KEY environment variable not set")
         client = openai.OpenAI(api_key=api_key)
-        name_hint = f" titled '{meeting_name}'" if meeting_name else ""
         prompt = (
-            f"Summarize the following meeting transcript{name_hint}. "
-            "- First, provide a concise summary in bullet points. If someone explains something - add this explnation in short. "
-            "- Then, list all action items separately, each with the responsible person (if mentioned). "
-            f"The most probable meeting language code is {lang_name}. "
-            f"Write the answer in {lang_name}."
+            f"""Role
+            You summarize meeting transcripts into clear, structured, and actionable notes. 
+            Prefer decisions, outcomes, and next steps over narration.
+            Be concise
+
+            Content-Aware Rules
+            Meetings can mix modes. Detect segments and apply the matching style:
+              1) Explanations / Presentations -> conspect of key ideas, reasoning, data/metrics, caveats.
+              2) Brainstorming / Discussions -> bullets of conclusions: what we figured out, agreed, rejected, or parked.
+              3) Task grooming / Feature planning -> structured list of requirements, tasks, acceptance criteria, dependencies.
+              4) Debugging / Incident review -> symptom, hypotheses tried, experiments/results, root cause, fix, verification.
+              5) Design review / Architecture -> decisions made, alternatives rejected (with brief rationale), open questions.
+              6) Retrospective -> What went well / What to improve / Actions.
+              7) Sales or client call -> client goals, constraints, commitments, follow-ups, deadlines.
+              8) Hiring interview / screening -> strengths, concerns, decision, next steps.
+
+            Extraction & Style
+              - Use short bullet lists; avoid filler and repetition.
+              - Normalize participant names; include owners and dates if stated.
+              - Mark decisions clearly (prefix with "Decision:"), and collect unresolved items under "Open Questions".
+              - For Action Items use checkboxes: "- [ ] Owner — action (due: YYYY-MM-DD)" when dates exist.
+              - Keep code, identifiers, and proper nouns as-is; do not translate names.
+              - Keep it concise; 
+
+            Output Structure
+              - Title: {meeting_name or 'Meeting Notes'}
+              - Participants (from calendar, if provided): {', '.join(attendees) if attendees else 'unknown'}.
+              - Summary Notes:
+                  - Explanations — conspect of key points (if present)
+                  - Brainstorming — conclusions/agreements/rejections (if present)
+                  - Groomed Tasks / Requirements — list with brief details (if present)
+                  - Debugging / Incident — root cause, fix, follow-up (if present)
+                  - Decisions — list of finalized choices (if present)
+                  - Open Questions — anything unresolved (if Present)
+              - Action Items (always last) — checklist as defined above
+
+            Examples (abbreviated)
+              - Architecture overview -> Purpose, components, data flow, constraints, scalability notes.
+              - Debugging session -> Symptom -> Hypotheses -> Result -> Root cause -> Fix -> Verification.
+              - Feature grooming -> User stories/requirements with acceptance criteria; dependencies and risks.
+              - Retrospective -> Went well / To improve / Actions with owners.
+              - Client call -> Goals, requirements, constraints; promised follow-ups and dates.
+
+            Language
+              - Write the notes in {lang_name}.
+
+            Participants (from calendar, if provided): {', '.join(attendees) if attendees else 'unknown'}.
+            When attributing decisions and action items, use these participant names when appropriate.
+
+            You are given the full meeting transcript below. Summarize accordingly.
+            """
         )
         response = client.chat.completions.create(
             model=model,
@@ -219,11 +332,22 @@ def summarize_text(
         if not api_key:
             raise RuntimeError("GOOGLE_API_KEY environment variable not set")
         genai.configure(api_key=api_key)
-        name_hint = f" titled '{meeting_name}'" if meeting_name else ""
         prompt = (
-            f"Summarize the following meeting transcript{name_hint} into "
-            f"{sentences} concise bullet points. "
-            f"Write the answer in {lang_name}."
+            f"""Role
+            You summarize meeting transcripts into clear, structured, and actionable notes.
+
+            Instructions
+              - Detect segments (explanation, brainstorming, grooming, debugging, design review, retro, client call, interview) and summarize each appropriately.
+              - Prefer decisions, outcomes, and next steps over narration.
+              - Include sections: Summary Notes (with suitable subsections), Decisions, Open Questions, and Action Items (checkboxes, owners/dates if present).
+              - Keep it concise; 
+              - Write the notes in {lang_name}.
+
+            Title: {meeting_name or 'Meeting Notes'}
+            Participants (from calendar, if provided): {', '.join(attendees) if attendees else 'unknown'}.
+            When attributing decisions and action items, use these participant names when appropriate.
+            Transcript follows:
+            """
         )
         model_name = model or "gemini-pro"
         generative_model = genai.GenerativeModel(model_name)
@@ -378,13 +502,18 @@ def main(argv=None):
         provider = cfg.get("llm_provider", "openai")
         model_key = "openai_model" if provider == "openai" else "gemini_model"
 
+        # Fetch calendar attendees if configured
+        attendees = []
+        if cfg.get("use_calendar_attendees"):
+            attendees = get_calendar_event_attendees()
+
         notes_summary = summarize_text(
             transcript,
-            cfg.get("summary_sentences", 5),
             provider,
             cfg.get(model_key, "gpt-3.5-turbo" if provider == "openai" else "gemini-pro"),
             cfg.get("language", "en"),
             meeting_name=base_name,
+            attendees=attendees,
         )
 
         links = ""

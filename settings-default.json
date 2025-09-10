@@ -7,7 +7,6 @@
   "transcription_backend": "whispercpp",
   "whispercpp_binary": "/Users/bwdude/projects/05.opensource/whisper.cpp/build/bin/whisper-cli",
   "whispercpp_model": "/Users/bwdude/projects/05.opensource/whisper.cpp/models/ggml-large-v3-turbo.bin",
-  "summary_sentences": 5,
   "language": "ru",
   "llm_provider": "openai",
   "openai_model": "gpt-4o",
@@ -17,5 +16,6 @@
   "keep_audio": false,
   "open_notes": false,
   "post_save_command": "open \"obsidian://open?vault=obsidian-vault&file={relative_url}\"",
-  "use_calendar_title": true
+  "use_calendar_title": true,
+  "use_calendar_attendees": true
 }

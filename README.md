@@ -10,7 +10,7 @@ This repository provides a simple Python script for recording a meeting on macOS
  - Compiled `whisper-cli` from [`ggml-org/whisper.cpp`](https://github.com/ggml-org/whisper.cpp) if you want to use the whispercpp backend.
 - A virtual audio device such as **BlackHole** is required if you want to capture sound coming from the browser. Without it the script only records your microphone.
 - [`switchaudio-osx`](https://github.com/deweller/switchaudio-osx) is required for automatic switching of input/output devices (optional).
-- [`icalBuddy`](https://github.com/ali-rantakari/icalBuddy) is used to read the current Calendar event title when `use_calendar_title` is enabled (optional).
+- [`icalBuddy`](https://github.com/ali-rantakari/icalBuddy) is used to read the current Calendar event title when `use_calendar_title` is enabled (optional). When `use_calendar_attendees` is enabled, it also reads the current event attendees to help attribute decisions and action items.
 
 ## Installation
 
@@ -63,6 +63,9 @@ This repository provides a simple Python script for recording a meeting on macOS
 3. The script records (or processes the provided file), transcribes the audio with Whisper, and summarizes the transcript using an LLM (OpenAI or Gemini). Each run creates a new folder inside the directory specified by `output_dir`, storing the audio and transcript. When you pass an existing audio file, the script uses its directory for all output files and appends the sanitized filename to the notes and transcript.
    If `use_calendar_title` is enabled on macOS, the current Calendar event title
    is used for the folder name instead of a timestamp.
+   If `use_calendar_attendees` is enabled, the script also tries to read attendee names
+   from the current Calendar event and passes them to the LLM to improve attribution
+   (e.g., owners of actions/decisions).
    Example structure when recording:
    ```
    output/
@@ -117,6 +120,11 @@ meeting is about.
   to be installed. The folder name is also provided to the LLM prompt as the
   meeting title for additional context.
 
+- `use_calendar_attendees` – if `true` on macOS, the script reads attendee
+  names from the current Calendar event via `icalBuddy` and passes them to the
+  LLM so it can use real participant names when attributing decisions and
+  action items. This improves clarity and reduces ambiguous phrasing.
+
 
 ## Capturing Browser and Microphone Audio with BlackHole
 
@@ -161,4 +169,3 @@ You can add a menu bar shortcut to run the script with one click:
 - Set `language` to `ru` in `settings.json` to generate transcripts and notes in Russian.
 - Set the `OPENAI_API_KEY` environment variable to use OpenAI-based summarization.
 - Set the `GOOGLE_API_KEY` environment variable to use Gemini-based summarization.
-
